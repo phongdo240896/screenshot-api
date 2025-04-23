@@ -29,7 +29,7 @@ app.get('/', async (req, res) => {
 
     await page.goto(url, {
       waitUntil: 'domcontentloaded',
-      timeout: 60000 // 60s để chờ các trang load chậm như cafef.vn
+      timeout: 90000 // 90s để chờ các trang load chậm như cafef.vn
     });
 
     await page.waitForTimeout(2000); // Chờ thêm 2s đảm bảo nội dung render xong
