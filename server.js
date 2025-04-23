@@ -26,7 +26,7 @@ app.get('/', async (req, res) => {
   try {
     await page.goto(url, {
       waitUntil: 'domcontentloaded',
-      timeout: 30000
+      timeout: 90000
     });
 
     await page.waitForTimeout(2000);
