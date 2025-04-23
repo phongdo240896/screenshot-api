@@ -5,7 +5,6 @@ const PORT = process.env.PORT || 10000;
 
 app.get('/', async (req, res) => {
   const url = req.query.url;
-  const fullPage = req.query.fullPage !== 'false';
 
   const clipX = parseInt(req.query.x);
   const clipY = parseInt(req.query.y);
@@ -29,11 +28,20 @@ app.get('/', async (req, res) => {
 
     await page.waitForTimeout(1500);
 
-    const options = clipWidth && clipHeight
-      ? { clip: { x: clipX || 0, y: clipY || 0, width: clipWidth, height: clipHeight } }
-      : { fullPage };
+    let screenshotOptions = {};
 
-    const screenshot = await page.screenshot(options);
+    if (!isNaN(clipX) && !isNaN(clipY) && !isNaN(clipWidth) && !isNaN(clipHeight)) {
+      screenshotOptions.clip = {
+        x: clipX,
+        y: clipY,
+        width: clipWidth,
+        height: clipHeight
+      };
+    } else {
+      screenshotOptions.fullPage = true;
+    }
+
+    const screenshot = await page.screenshot(screenshotOptions);
     await browser.close();
 
     res.set('Content-Type', 'image/png');
