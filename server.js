@@ -17,7 +17,12 @@ app.get('/', async (req, res) => {
   const page = await browser.newPage();
 
   try {
-    await page.goto(url, { waitUntil: 'networkidle' });
+    await page.goto(url, {
+  waitUntil: 'domcontentloaded',
+  timeout: 15000
+  });
+  await page.waitForTimeout(1000); // chờ 1s trước khi chụp
+
     const screenshot = await page.screenshot({ fullPage });
 
     await browser.close();
