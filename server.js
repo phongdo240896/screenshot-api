@@ -9,7 +9,11 @@ app.get('/', async (req, res) => {
 
   if (!url) return res.status(400).send('Missing URL parameter');
 
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({
+  headless: true,
+  args: ['--no-sandbox', '--disable-setuid-sandbox']
+  });
+  
   const page = await browser.newPage();
 
   try {
