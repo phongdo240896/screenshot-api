@@ -6,14 +6,17 @@ const PORT = process.env.PORT || 10000;
 app.get('/', async (req, res) => {
   const url = req.query.url;
   const fullPage = req.query.fullPage !== 'false';
-  const clipParams = ['x', 'y', 'width', 'height'];
-  const hasClip = clipParams.every(param => req.query[param]);
+
+  const clipX = parseInt(req.query.x);
+  const clipY = parseInt(req.query.y);
+  const clipWidth = parseInt(req.query.width);
+  const clipHeight = parseInt(req.query.height);
 
   if (!url) return res.status(400).send('Missing URL parameter');
 
   const browser = await chromium.launch({
     headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
   });
 
   const page = await browser.newPage();
@@ -21,28 +24,20 @@ app.get('/', async (req, res) => {
   try {
     await page.goto(url, {
       waitUntil: 'domcontentloaded',
-      timeout: 90000
+      timeout: 60000
     });
 
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(1500);
 
-    let screenshotOptions = {};
+    const options = clipWidth && clipHeight
+      ? { clip: { x: clipX || 0, y: clipY || 0, width: clipWidth, height: clipHeight } }
+      : { fullPage };
 
-    if (hasClip) {
-      screenshotOptions.clip = {
-        x: parseInt(req.query.x),
-        y: parseInt(req.query.y),
-        width: parseInt(req.query.width),
-        height: parseInt(req.query.height),
-      };
-    } else {
-      screenshotOptions.fullPage = true;
-    }
-
-    const screenshot = await page.screenshot(screenshotOptions);
-
+    const screenshot = await page.screenshot(options);
     await browser.close();
-    res.status(200).set('Content-Type', 'image/png').send(screenshot);
+
+    res.set('Content-Type', 'image/png');
+    res.send(screenshot);
   } catch (err) {
     await browser.close();
     res.status(500).send('Failed to capture screenshot: ' + err.message);
