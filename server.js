@@ -5,6 +5,7 @@ const PORT = process.env.PORT || 10000;
 
 app.get('/', async (req, res) => {
   const url = req.query.url;
+  const fullPage = req.query.fullPage !== 'false';
 
   const clipX = parseInt(req.query.x);
   const clipY = parseInt(req.query.y);
@@ -26,11 +27,16 @@ app.get('/', async (req, res) => {
       timeout: 60000
     });
 
+    // chờ load thêm để tránh bị trắng hoặc thiếu dữ liệu
     await page.waitForTimeout(1500);
 
     let screenshotOptions = {};
 
-    if (!isNaN(clipX) && !isNaN(clipY) && !isNaN(clipWidth) && !isNaN(clipHeight)) {
+    if (
+      !isNaN(clipX) && !isNaN(clipY) &&
+      !isNaN(clipWidth) && clipWidth > 0 &&
+      !isNaN(clipHeight) && clipHeight > 0
+    ) {
       screenshotOptions.clip = {
         x: clipX,
         y: clipY,
@@ -38,7 +44,7 @@ app.get('/', async (req, res) => {
         height: clipHeight
       };
     } else {
-      screenshotOptions.fullPage = true;
+      screenshotOptions.fullPage = fullPage;
     }
 
     const screenshot = await page.screenshot(screenshotOptions);
