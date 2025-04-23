@@ -18,21 +18,18 @@ app.get('/', async (req, res) => {
     ]
   });
 
-  const page = await browser.newPage();
+  const context = await browser.newContext({
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36'
+  });
+  const page = await context.newPage();
 
   try {
-    // Fake user-agent để tránh bị chặn bot
-    await page.setUserAgent(
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' +
-      '(KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36'
-    );
-
     await page.goto(url, {
       waitUntil: 'domcontentloaded',
-      timeout: 90000 // 90s để chờ các trang load chậm như cafef.vn
+      timeout: 30000
     });
 
-    await page.waitForTimeout(2000); // Chờ thêm 2s đảm bảo nội dung render xong
+    await page.waitForTimeout(2000);
 
     const screenshot = await page.screenshot({ fullPage });
 
