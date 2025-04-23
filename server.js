@@ -6,18 +6,14 @@ const PORT = process.env.PORT || 10000;
 app.get('/', async (req, res) => {
   const url = req.query.url;
   const fullPage = req.query.fullPage !== 'false';
-
-  // Các tham số cắt ảnh
-  const x = req.query.x ? parseInt(req.query.x) : null;
-  const y = req.query.y ? parseInt(req.query.y) : null;
-  const width = req.query.width ? parseInt(req.query.width) : null;
-  const height = req.query.height ? parseInt(req.query.height) : null;
+  const clipParams = ['x', 'y', 'width', 'height'];
+  const hasClip = clipParams.every(param => req.query[param]);
 
   if (!url) return res.status(400).send('Missing URL parameter');
 
   const browser = await chromium.launch({
     headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
   });
 
   const page = await browser.newPage();
@@ -25,25 +21,28 @@ app.get('/', async (req, res) => {
   try {
     await page.goto(url, {
       waitUntil: 'domcontentloaded',
-      timeout: 60000
+      timeout: 90000
     });
 
-    await page.waitForTimeout(2000); // đợi thêm nội dung render xong
+    await page.waitForTimeout(2000);
 
-    let screenshot;
+    let screenshotOptions = {};
 
-    if (x !== null && y !== null && width !== null && height !== null) {
-      // Trường hợp chụp theo clip
-      screenshot = await page.screenshot({
-        clip: { x, y, width, height }
-      });
+    if (hasClip) {
+      screenshotOptions.clip = {
+        x: parseInt(req.query.x),
+        y: parseInt(req.query.y),
+        width: parseInt(req.query.width),
+        height: parseInt(req.query.height),
+      };
     } else {
-      // Mặc định chụp toàn trang
-      screenshot = await page.screenshot({ fullPage });
+      screenshotOptions.fullPage = true;
     }
 
+    const screenshot = await page.screenshot(screenshotOptions);
+
     await browser.close();
-    res.set('Content-Type', 'image/png').send(screenshot);
+    res.status(200).set('Content-Type', 'image/png').send(screenshot);
   } catch (err) {
     await browser.close();
     res.status(500).send('Failed to capture screenshot: ' + err.message);
